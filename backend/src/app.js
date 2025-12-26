@@ -1,13 +1,13 @@
 import express from 'express';
+import authRoutes from './modules/auth/auth.routes.js';
 
 const app = express();
-
-// middlewares
 app.use(express.json());
 
-// health check
 app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
 });
+
+app.use('/auth', authRoutes);
 
 export default app;
