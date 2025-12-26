@@ -1,35 +1,42 @@
-const projects = [];
+import { pool } from '../../config/db.js';
 
-export function createProject({ name, ownerId }) {
-    const project = {
-        id: `proj_${projects.length + 1}`,
-        name,
-        ownerId,
-        members: [
-            { userId: ownerId, role: 'owner' }
-        ],
-        createdAt: new Date()
-    };
+export async function createProject({ name, ownerId }) {
+    const id = `proj_${Date.now()}`;
 
-    projects.push(project);
-    return project;
-}
-
-export function getProjectsByUser(userId) {
-    return projects.filter(p =>
-        p.members.some(m => m.userId === userId)
+    await pool.query(
+        'INSERT INTO projects (id, name, owner_id) VALUES ($1,$2,$3)',
+        [id, name, ownerId]
     );
+
+    await pool.query(
+        'INSERT INTO project_members (project_id, user_id, role) VALUES ($1,$2,$3)',
+        [id, ownerId, 'owner']
+    );
+
+    return { id, name, ownerId };
 }
 
-export function updateProject({ projectId, name, userId }) {
-    const project = projects.find(p => p.id === projectId);
-    if (!project) throw new Error('Project not found');
+export async function getProjectsByUser(userId) {
+    const { rows } = await pool.query(
+        `SELECT p.* FROM projects p
+     JOIN project_members m ON m.project_id=p.id
+     WHERE m.user_id=$1`,
+        [userId]
+    );
+    return rows;
+}
 
-    const member = project.members.find(m => m.userId === userId);
-    if (!member || member.role !== 'owner') {
-        throw new Error('Not authorized');
-    }
+export async function updateProject({ projectId, name, userId }) {
+    const { rows } = await pool.query(
+        'SELECT role FROM project_members WHERE project_id=$1 AND user_id=$2',
+        [projectId, userId]
+    );
+    if (!rows[0] || rows[0].role !== 'owner') throw new Error('Not authorized');
 
-    project.name = name;
-    return project;
+    await pool.query(
+        'UPDATE projects SET name=$1 WHERE id=$2',
+        [name, projectId]
+    );
+
+    return { id: projectId, name };
 }
