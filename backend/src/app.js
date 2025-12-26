@@ -1,5 +1,7 @@
 import express from 'express';
 import authRoutes from './modules/auth/auth.routes.js';
+import projectRoutes from './modules/projects/project.routes.js';
+
 
 const app = express();
 app.use(express.json());
@@ -21,5 +23,7 @@ app.get(
 );
 
 app.use('/auth', authRoutes);
+app.use('/projects', projectRoutes);
+
 
 export default app;
