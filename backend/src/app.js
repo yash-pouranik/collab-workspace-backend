@@ -41,5 +41,9 @@ app.use('/auth', authRoutes);
 app.use('/projects', projectRoutes);
 app.use('/jobs', jobRoutes);
 
+import swaggerUi from 'swagger-ui-express';
+import { specs } from './config/swagger.js';
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+
 
 export default app;

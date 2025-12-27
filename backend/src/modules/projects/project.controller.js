@@ -4,7 +4,8 @@ import {
     updateProject,
     inviteMember,
     updateMemberRole,
-    getProjectById
+    getProjectById,
+    deleteProject
 } from './project.service.js';
 
 export async function create(req, res) {
@@ -16,19 +17,31 @@ export async function create(req, res) {
 }
 
 
-export function list(req, res) {
-    const projects = getProjectsByUser(req.user.id);
+export async function list(req, res) {
+    const projects = await getProjectsByUser(req.user.id);
     res.json(projects);
 }
 
-export function update(req, res) {
+export async function update(req, res) {
     try {
-        const project = updateProject({
+        const project = await updateProject({
             projectId: req.params.id,
             name: req.body.name,
             userId: req.user.id
         });
         res.json(project);
+    } catch (err) {
+        res.status(403).json({ message: err.message });
+    }
+}
+
+export async function remove(req, res) {
+    try {
+        const result = await deleteProject({
+            projectId: req.params.id,
+            userId: req.user.id
+        });
+        res.json(result);
     } catch (err) {
         res.status(403).json({ message: err.message });
     }

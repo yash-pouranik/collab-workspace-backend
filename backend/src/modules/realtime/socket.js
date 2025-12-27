@@ -1,4 +1,5 @@
 import { Server } from 'socket.io';
+import { createAdapter } from '@socket.io/redis-adapter';
 import jwt from 'jsonwebtoken';
 import { env } from '../../config/env.js';
 import { redis } from '../../config/redis.js';
@@ -6,13 +7,18 @@ import { redis } from '../../config/redis.js';
 let io;
 
 export function initSocket(server) {
-    // INITIALIZE SOCKET SERVER
+    // INITIALIZE SOCKET SERVER (with Redis Adapter)
     io = new Server(server, {
         cors: {
             origin: '*', // ADJUST FOR PRODUCTION
             methods: ['GET', 'POST']
         }
     });
+
+    // Setup Redis Adapter
+    const pubClient = redis;
+    const subClient = redis.duplicate();
+    io.adapter(createAdapter(pubClient, subClient));
 
     // AUTHENTICATION MIDDLEWARE
     io.use((socket, next) => {

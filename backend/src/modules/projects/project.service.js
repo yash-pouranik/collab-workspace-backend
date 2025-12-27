@@ -42,6 +42,23 @@ export async function updateProject({ projectId, name, userId }) {
     return { id: projectId, name };
 }
 
+export async function deleteProject({ projectId, userId }) {
+    // Check ownership
+    const { rows } = await pool.query(
+        'SELECT role FROM project_members WHERE project_id=$1 AND user_id=$2',
+        [projectId, userId]
+    );
+
+    if (!rows[0] || rows[0].role !== 'owner') {
+        throw new Error('Not authorized to delete this project');
+    }
+
+    // Delete project (cascade will handle members)
+    await pool.query('DELETE FROM projects WHERE id=$1', [projectId]);
+
+    return { message: 'Project deleted successfully' };
+}
+
 export async function getProjectById({ projectId, userId }) {
     const { rows } = await pool.query(
         `

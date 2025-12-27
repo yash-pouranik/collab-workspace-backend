@@ -1,4 +1,5 @@
 import { codeExecutionQueue } from './jobs.queue.js';
+import { pool } from '../../config/db.js';
 
 // SUBMIT NEW JOB
 export async function submitJob(req, res) {
@@ -26,20 +27,31 @@ export async function submitJob(req, res) {
 // GET JOB STATUS
 export async function getJobStatus(req, res) {
     try {
+        // 1. Check Queue first
         const job = await codeExecutionQueue.getJob(req.params.id);
 
-        if (!job) {
-            return res.status(404).json({ message: 'Job not found' });
+        if (job) {
+            const state = await job.getState();
+            const result = job.returnvalue;
+            return res.json({ id: job.id, state, result });
         }
 
-        const state = await job.getState();
-        const result = job.returnvalue;
+        // 2. Check Database (for completed/old jobs)
+        const { rows } = await pool.query(
+            'SELECT * FROM job_results WHERE job_id=$1',
+            [req.params.id]
+        );
 
-        res.json({
-            id: job.id,
-            state,
-            result
-        });
+        if (rows[0]) {
+            return res.json({
+                id: rows[0].job_id,
+                state: rows[0].status,
+                result: { output: rows[0].output }
+            });
+        }
+
+        return res.status(404).json({ message: 'Job not found' });
+
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
