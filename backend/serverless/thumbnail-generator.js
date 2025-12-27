@@ -2,7 +2,6 @@
 // Simulating a dedicated AWS Lambda / Google Cloud Function
 
 export const handler = async (event, context) => {
-    // In a real scenario, this would import 'sharp' or 'jimp'
     console.log('--- SERVERLESS FUNCTION INVOKED ---');
     console.log('Event:', JSON.stringify(event));
 
