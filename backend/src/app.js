@@ -7,11 +7,14 @@ import projectRoutes from './modules/projects/project.routes.js';
 import jobRoutes from './modules/jobs/jobs.routes.js';
 
 
+import morgan from 'morgan';
+
 const app = express();
 
 // SECURITY MIDDLEWARE
 app.use(helmet());
 app.use(cors());
+app.use(morgan('dev')); // HTTP Request Logging
 app.use(express.json());
 
 // RATE LIMITING
@@ -37,9 +40,12 @@ app.get(
     }
 );
 
-app.use('/auth', authRoutes);
-app.use('/projects', projectRoutes);
-app.use('/jobs', jobRoutes);
+import functionRoutes from './modules/functions/functions.routes.js';
+
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/projects', projectRoutes);
+app.use('/api/v1/jobs', jobRoutes);
+app.use('/api/v1/functions', functionRoutes);
 
 import swaggerUi from 'swagger-ui-express';
 import { specs } from './config/swagger.js';
